@@ -1,4 +1,17 @@
 
+
+is_valid_column <- function(values) {
+  # short sample to speed up big datasets
+  if (length(values) > 1000) {
+    n_unique <- length(unique(values[1:10])) 
+    if (n_unique > 2) {return(FALSE)}
+  }
+  
+  n_unique <- length(unique(values))
+  return(n_unique <= 2)
+}
+
+
 #' Converts a vector to boolean values (using factors)
 #'
 #' @param x Vector of values
