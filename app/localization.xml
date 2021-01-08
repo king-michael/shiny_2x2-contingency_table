@@ -1,0 +1,21 @@
+<localization>
+  <metrics>
+    <metric abbrv="TP"  label="True positive"></metric>
+    <metric abbrv="TN"  label="True negative"></metric>
+    <metric abbrv="FN"  label="False negative"></metric>
+    <metric abbrv="FP"  label="False positive"></metric>
+    <metric abbrv="P"   label="condition positive"></metric>
+    <metric abbrv="N"   label="condition negative"></metric>
+    <metric abbrv="TPR" label="sensitivity"></metric>
+    <metric abbrv="TNR" label="specificity"></metric>
+    <metric abbrv="PPV" label="precision"></metric>
+    <metric abbrv="NPV" label="negative predictive value"></metric>
+    <metric abbrv="FNR" label="false negative rate"></metric>
+    <metric abbrv="FPR" label="false positive rate"></metric>
+    <metric abbrv="FDR" label="false discovery rate"></metric>
+    <metric abbrv="FOR" label="false omission rate"></metric>
+    <metric abbrv="ACC" label="accuracy"></metric>
+    <metric abbrv="F1"  label="F1 score"></metric>
+    <metric abbrv="MCC" label="Matthews correlation coefficient"></metric>
+  </metrics>
+</localization>
