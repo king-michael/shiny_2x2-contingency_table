@@ -1,13 +1,16 @@
 require(shiny)
 require(shinyjs)
+require(shinyWidgets)
+
 require(dplyr)
 library(MazamaCoreUtils)
 logger.setup(infoLog="server.log")
 
 source('utils.R')
+source('statistics.R')
+source('localization.R')
 
-df = readr::read_csv("qualitative_both_methods.csv") # DEBUG REMOVE LATER
-
+localization <- Localization$new("localization.xml")
 
 server = function(input, output, session) {
   # disable tab2 on page load
@@ -240,9 +243,91 @@ server = function(input, output, session) {
     doAnalysis <<- TRUE
     js$enableTab("Analysis")
     js$enableTab("Report")
+    updateNavlistPanel(session, "sidebar", selected = "Analysis")
   })
   
   #END: Upload files ----------------------------------------- Upload section #
+  
+  #END: Analysis  -------------------------------------------- Upload section #
+  mapping_abbrv2label <- localization$get_map_attr2attr_from_xpath('metrics/metric', 'abbrv', 'label')
+  mapping_abbrv2tips <- localization$get_map_attr2text_from_xpath('metrics/metric', 'abbrv')
+  
+  keys <- c("TPR", "TNR", "PPV", "NPV", "FNR", "FPR", "FDR", "FOR", "ACC", "F1", "MCC")
+  keys_default <- c("TPR", "TNR", "PPV", "ACC")
+  
+  labels <- mapping_abbrv2label[keys] # unlist(mapping_abbrv2label[keys], use.names = FALSE)
+  tips <- mapping_abbrv2tips[keys]
+  
+  analysis <- reactiveValues( )
+  
+  # calculate the values
+  observeEvent(doAnalysis, {
+    analysis$metrics <- calculate_metrics(data$reference, data$test)
+    analysis$performance_metrics <- do.call(calculate_performance_metrics, analysis$metrics)
+    
+    
+    # draw the confusion matrix
+    output$confusion_matrix <- renderTable(as.confusionmatrix(analysis$metrics), rownames=TRUE)
+    
+  }, ignoreInit = TRUE)
+  
+  
+  
+  #BEGIN: performance table --------------------------------------------------#
+  selections_performance_default <- as.character(which(keys %in% keys_default))
+  selections_performance <- keys_default
+  makeReactiveBinding("selections_performance")
+  
+  observe({
+    output$table_performance <- DT::renderDataTable({
+      selections_performance <<- input$selected_performance
+      
+      if (length(selections_performance) == 0) {
+        df = data.frame(metrics=c("No metric selected"), values=c(""))
+      } else {
+        df = data.frame(
+          metrics =  unlist(labels[selections_performance], use.names = FALSE),
+          values = unlist(analysis$performance_metrics[selections_performance], use.names = FALSE)
+        )
+      }
+      
+      colnames(df) <- c("Metrics", "Values")
+      tips <- labels # DEBUG
+      tips <- tips[selections_performance]
+      tips <- paste(paste0("'", tips, "'"), collapse=", ")
+      callback = DT::JS(sprintf(
+        "var tips = [%s],
+      firstColumn = $('#%s td:nth-child(1n+1)');
+      for (var i = 0; i < tips.length; i++) {
+        $(firstColumn[2*i]).attr('title', tips[i]);
+        $(firstColumn[2*i+1]).attr('title', tips[i]);
+      }", tips, 'table_performance'))
+      
+      DT::datatable(df, rownames=FALSE, callback=callback,
+                    selection=list(mode="none", target="row"),
+                    options=list(dom='t', searching=FALSE, paging=FALSE, info=FALSE, ordering=FALSE)
+      ) %>% DT::formatRound(c(2), 2)
+    }, server=FALSE)
+  })
+
+  shinyWidgets::updateCheckboxGroupButtons(session, "selected_performance",
+                                           choiceNames = unlist(labels, use.names = FALSE),
+                                           choiceValues = keys,
+                                           selected = keys_default,
+                                           checkIcon = list(yes = icon("ok", lib = "glyphicon"))
+  )
+  
+  # toggle performance selection
+  observeEvent(input$toggle_performance, {
+    if (input$toggle_performance) {
+      shinyjs::showElement("selected_performance")
+    } else {
+      shinyjs::hideElement("selected_performance")
+    }
+  })
+  
+  #END: performance table --------------------------------------------------#
+  
   
   # Downloadable csv of selected dataset ----
   # output$downloadData <- downloadHandler(

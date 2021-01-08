@@ -6,3 +6,35 @@
   cursor: not-allowed !important;
   border-color: #aaa !important;
 }
+
+#confusion_matrix td {
+  border-right: 1px solid #ddd;
+}
+#confusion_matrix tr {
+  text-align: center;
+  vertical-align: central;
+}
+
+#confusion_matrix td:first-child {
+  font-weight: bold;
+  border-top: none;
+  border-bottom: none;
+  border-right: 2px solid #ddd;
+}
+#confusion_matrix th:first-child {
+  border-bottom: none;
+}
+#confusion_matrix td:last-child {
+  border-right: 2px solid #ddd;
+}
+#confusion_matrix tr:nth-child(2) td:nth-child(1n+2) {
+  border-bottom: 2px solid #ddd;
+}
+
+.material-switch {
+  margin-top: 2px;
+}
+
+.h1 {
+  margin-top: none;
+}

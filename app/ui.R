@@ -1,6 +1,25 @@
 library(shiny)
 require(shinyjs)
+require(shinyWidgets)
 
+
+labelWithTooltip <- function(text, ..., tooltip = NULL, required = FALSE) {
+  text <- paste0(text, paste0(...))
+  if (is.null(tooltip)) {
+    if (required) {
+      tags$div(text, tags$span('*', style='color: #f00;'))
+    } else {
+      text
+    }
+  } else {
+    if (required) {
+      tags$div(text, tags$span('*', style='color: #f00;'), title=tooltip)
+    } else {
+      tags$div(text, title=tooltip)
+    }
+  }
+  
+}
 
 ui = fluidPage(
   
@@ -14,20 +33,26 @@ ui = fluidPage(
   
   titlePanel("Evaluate Test Method"),
   
-  navlistPanel("Workflow",
-               widths = c(2, 10),
+  navbarPage("Workflow", id='sidebar',
+               #widths = c(2, 10),
                selected = "Upload",
     
   
   # Upload section ------------------------------------------- Upload section #
   
-  tabPanel("Upload",
+  tabPanel("Upload", wellPanel(
     h1("Upload"),
+    
     sidebarLayout(
       sidebarPanel(
         
         fluidRow(
-          fileInput("file_reference", "Upload reference file (CSV)", 
+          fileInput("file_reference",
+                    labelWithTooltip("Upload reference file (CSV)", required = TRUE, 
+                                     tooltip = paste0(
+                                       "File with the values of the reference methode. ",
+                                       "Requires at least one column with binary values ",
+                                       "(optional: multiple columns for reference and test)")), 
                     accept = c(
                       "text/csv",
                       "text/comma-separated-values,text/plain",
@@ -38,10 +63,16 @@ ui = fluidPage(
           condition = 'output.file_reference_uploaded',
           fluidRow(
             p('Optional'),
-            fileInput("file_test", "Upload test file (CSV)", accept = c(
-              "text/csv",
-              "text/comma-separated-values,text/plain",
-              ".csv")),
+            fileInput("file_test", 
+                      labelWithTooltip("Upload test file (CSV)",
+                                       tooltip = paste0(
+                                         "File with the values of the test methode. ",
+                                         "requires at least one column with binary values")
+                                        ),
+                      accept = c(
+                        "text/csv",
+                        "text/comma-separated-values,text/plain",
+                        ".csv")),
           ) # fluidRow
         ), # conditionalPanel
         
@@ -52,7 +83,7 @@ ui = fluidPage(
         ), # conditionalPanel
         conditionalPanel(
           condition = 'output.upload_valid',
-          actionButton("btn_analyze", "Run Analysis", style="background-color:#26A65B")
+          actionButton("btn_analyze", "Run Analysis", style="background-color:#26A65B", width="100%")
         ) # conditionalPanel
       ), # sidebarPanel
       
@@ -64,8 +95,12 @@ ui = fluidPage(
             fluidRow(
               h4('Reference method'),
               column(6,
-                selectInput("selected_reference_file", "Select file", c()),
-                selectInput("selected_reference_column", "Select column", c())
+                selectInput("selected_reference_file", 
+                            labelWithTooltip("Select file", tooltip = "Select the file that should be used.", required = TRUE), 
+                            choices=c()),
+                selectInput("selected_reference_column", 
+                            labelWithTooltip("Select column", tooltip = "Select the column with binary values.", required = TRUE),
+                            choices=c())
               ), # column
               column(6,
                      conditionalPanel(
@@ -73,10 +108,12 @@ ui = fluidPage(
                        fluidRow(
                          align='top',
                          column(6,
-                                selectInput("selected_reference_positive", "positive", c()),
+                                selectInput("selected_reference_positive", 
+                                            labelWithTooltip("positive", tooltip = "Select the value for positive results", required = TRUE), 
+                                            choices = c()),
                          ),
                          column(6,
-                                tags$b("negative"),
+                                tags$b("negative", title="automatically set"),
                                 verbatimTextOutput('selected_reference_negative', placeholder=TRUE)
                          )
                        ) # fluid row
@@ -97,8 +134,12 @@ ui = fluidPage(
             fluidRow(
               h4('Test method', noWS=TRUE),
               column(6,
-                selectInput("selected_test_file", "Select file", c()),
-                selectInput("selected_test_column", "Select column", c())
+                selectInput("selected_test_file", 
+                            labelWithTooltip("Select file", tooltip = "Select the file that should be used.", required = TRUE), 
+                            choices=c()),
+                selectInput("selected_test_column", 
+                            labelWithTooltip("Select column", tooltip = "Select the column with binary values.", required = TRUE), 
+                            choices = c())
               ), # column
               column(6,
                      conditionalPanel(
@@ -106,10 +147,12 @@ ui = fluidPage(
                        fluidRow(
                          align='top',
                          column(6,
-                                selectInput("selected_test_positive", "positive", c()),
+                                selectInput("selected_test_positive", 
+                                            labelWithTooltip("positive", tooltip = "Select the value for positive results", required = TRUE),
+                                            choices = c()),
                          ),
                          column(6,
-                                tags$b("negative"),
+                                tags$b("negative", title="automatically set"),
                                 verbatimTextOutput('selected_test_negative', placeholder=TRUE)
                          )
                        ) # fluid row
@@ -125,15 +168,35 @@ ui = fluidPage(
         
       ) #mainPanel
     ) # sidebarLayout
-  ), # tabPanel - section
+  )), # tabPanel - section
   
   # Analysis section --------------------------------------- Analysis section #
 
   tabPanel("Analysis",
-    h1("Analysis"), 
-    column(3,
-           fileInput("file", "Choose CSV File", accept = ".csv")
-    )
+           h1("Analysis"),
+           fluidRow(
+             column(4, tableOutput('confusion_matrix' )),
+             column(4, 
+                    DT::dataTableOutput('table_performance'),
+                    shinyWidgets::materialSwitch(
+                      inputId = "toggle_performance",
+                      label = "Change Metrics", 
+                      value = FALSE,
+                      status = "info"
+                    ), # materialSwitch
+                    ),
+             column(4,
+                    shinyWidgets::checkboxGroupButtons(
+                      inputId = "selected_performance",
+                      label = "Select performance metrics",
+                      choices = c("DEBUG"),
+                      selected = 1,
+                      justified = TRUE,
+                      direction = "vertical",
+                      checkIcon = list(yes = icon("ok", lib = "glyphicon"))
+                    ) # checkboxGroupButtons
+             ), #column
+           ) # fluidRow
   ), # tabPanel
   
   # Report section ------------------------------------------- Report section #
