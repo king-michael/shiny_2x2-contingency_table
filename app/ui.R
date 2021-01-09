@@ -3,6 +3,8 @@ require(shinyjs)
 require(shinyWidgets)
 
 
+source('ui_report.R')
+
 labelWithTooltip <- function(text, ..., tooltip = NULL, required = FALSE) {
   text <- paste0(text, paste0(...))
   if (is.null(tooltip)) {
@@ -37,13 +39,13 @@ ui = fluidPage(
                #widths = c(2, 10),
                selected = "Upload",
     
-  
-  # Upload section ------------------------------------------- Upload section #
+  # section: Upload  ----------------------------------------------------------
   
   tabPanel("Upload", wellPanel(
     h1("Upload"),
     
     sidebarLayout(
+      # section: Upload : sidebarPanel ----------------------------------------
       sidebarPanel(
         
         fluidRow(
@@ -87,6 +89,7 @@ ui = fluidPage(
         ) # conditionalPanel
       ), # sidebarPanel
       
+      # section: Upload :mainPanel --------------------------------------------
       mainPanel(
         # Options Reference File ----------------------------------------------
         conditionalPanel(
@@ -170,41 +173,48 @@ ui = fluidPage(
     ) # sidebarLayout
   )), # tabPanel - section
   
-  # Analysis section --------------------------------------- Analysis section #
-
+  # section: Analysis ---------------------------------------------------------
   tabPanel("Analysis",
-           h1("Analysis"),
-           fluidRow(
-             column(4, tableOutput('confusion_matrix' )),
-             column(4, 
-                    DT::dataTableOutput('table_performance'),
-                    shinyWidgets::materialSwitch(
-                      inputId = "toggle_performance",
-                      label = "Change Metrics", 
-                      value = FALSE,
-                      status = "info"
-                    ), # materialSwitch
-                    ),
-             column(4,
-                    shinyWidgets::checkboxGroupButtons(
-                      inputId = "selected_performance",
-                      label = "Select performance metrics",
-                      choices = c("DEBUG"),
-                      selected = 1,
-                      justified = TRUE,
-                      direction = "vertical",
-                      checkIcon = list(yes = icon("ok", lib = "glyphicon"))
-                    ) # checkboxGroupButtons
-             ), #column
-           ) # fluidRow
+     h1("Analysis"),
+     fluidRow(
+       column(4, tableOutput('confusion_matrix' )),
+       column(4, 
+              DT::dataTableOutput('table_performance'),
+              shinyWidgets::materialSwitch(
+                inputId = "toggle_performance",
+                label = "Change Metrics", 
+                value = FALSE,
+                status = "info"
+              ), # materialSwitch
+              ),
+       column(4,
+              shinyWidgets::checkboxGroupButtons(
+                inputId = "selected_performance",
+                label = "Select performance metrics",
+                choices = c("DEBUG"),
+                selected = 1,
+                justified = TRUE,
+                direction = "vertical",
+                checkIcon = list(yes = icon("ok", lib = "glyphicon"))
+              ) # checkboxGroupButtons
+       ), #column
+     ) # fluidRow
   ), # tabPanel
   
-  # Report section ------------------------------------------- Report section #
+  # section: Analysis ---------------------------------------------------------
   
   tabPanel("Report",
-    p("Download the full report a DOCX file."),
-    # Button
-    downloadButton("downloadData", "Download")
+     fluidRow(
+       column(6,
+              reportUi("report_selected",
+                       label="Download",
+                       text="Download the report for the selected metrics.")
+       ),
+       column(6,
+              reportUi("report_full",
+                       label="Download Full Report",
+                       text="Download the full report (DOCX).")),
+     ) #fluidRow
   ) # tabPanel
   
   ) # navlistPanel

@@ -21,7 +21,7 @@ server = function(input, output, session) {
   doAnalysis <- FALSE
   makeReactiveBinding("doAnalysis")
   
-  # Upload section ------------------------------------------- Upload section #
+  
   
   uploaded_files <- reactiveValues(
     reference=list(
@@ -45,7 +45,7 @@ server = function(input, output, session) {
   
   
   
-  #BEGIN: Upload files --------------------------------------- Upload section #
+  # section: Upload : Upload files --------------------------------------------
   
   observeEvent(input$file_reference, {
     inFile <- input$file_reference
@@ -70,11 +70,7 @@ server = function(input, output, session) {
     )
   })
   
-  #END: Upload files ----------------------------------------- Upload section #
-  
-  #BEGIN: display options ------------------------------------ Upload section #
-  
-  # Update SelectInput of file selections -------------------------------------
+  # section: Upload : Options : Update SelectInput of file selections ---------
   
   output$file_reference_uploaded <- reactive({
     # set choices for reference file
@@ -103,7 +99,7 @@ server = function(input, output, session) {
   })
   outputOptions(output, 'file_test_uploaded', suspendWhenHidden=FALSE)
   
-  # Update SelectInput of column selections ----------------------------------
+  # section: Upload : Options : Update SelectInput of column selections -------
   
   observeEvent(input$selected_reference_file, {
     if (nchar(input$selected_reference_file) == 0) {return()}
@@ -201,8 +197,8 @@ server = function(input, output, session) {
     }
     output$selected_test_negative <- renderText(negative)
   })
-  #END: display options -------------------------------------- Upload section #
-  
+
+  # section: Upload : Check valid output --------------------------------------
   data <- reactiveValues(
     reference=NULL,
     test=NULL
@@ -247,8 +243,8 @@ server = function(input, output, session) {
   })
   
   #END: Upload files ----------------------------------------- Upload section #
-  
-  #END: Analysis  -------------------------------------------- Upload section #
+  # section: Analysis ---------------------------------------------------------
+
   mapping_abbrv2label <- localization$get_map_attr2attr_from_xpath('metrics/metric', 'abbrv', 'label')
   mapping_abbrv2tips <- localization$get_map_attr2text_from_xpath('metrics/metric', 'abbrv')
   
@@ -272,9 +268,7 @@ server = function(input, output, session) {
   }, ignoreInit = TRUE)
   
   
-  
-  #BEGIN: performance table --------------------------------------------------#
-  selections_performance_default <- as.character(which(keys %in% keys_default))
+  # section: Analysis : performance table -------------------------------------
   selections_performance <- keys_default
   makeReactiveBinding("selections_performance")
   
@@ -326,18 +320,29 @@ server = function(input, output, session) {
     }
   })
   
-  #END: performance table --------------------------------------------------#
+  # section: Report -----------------------------------------------------------
   
+  report <- reactive({
+    create_report_list(analysis$metrics, analysis$performance_metrics, keys)
+  })
   
-  # Downloadable csv of selected dataset ----
-  # output$downloadData <- downloadHandler(
-  #   filename = function() {
-  #     paste(input$dataset, ".csv", sep = "")
-  #   },
-  #   content = function(file) {
-  #     write.csv(datasetInput(), file, row.names = FALSE)
-  #   }
-  # )
+  reportServer(
+    "report_full",
+    outputfile = "Report_full.docx",
+    file_template = "resources/templateReport.docx",
+    report = report()
+  )
+  
+  report_selected <- reactive({
+    create_report_list(analysis$metrics, analysis$performance_metrics, selections_performance)
+  })
+  
+  reportServer(
+    "report_selected",
+    outputfile = "Report.docx",
+    file_template = "resources/templateReport.docx",
+    report = report_selected()
+  )
   
   
 }
