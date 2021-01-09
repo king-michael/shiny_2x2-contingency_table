@@ -35,6 +35,8 @@ server = function(input, output, session) {
   )
   
   selections <- reactiveValues(
+    reference_file=NULL,
+    test_file=NULL,
     df_reference=NULL,
     df_test=NULL,
     column_reference=NULL,
@@ -103,6 +105,7 @@ server = function(input, output, session) {
   
   observeEvent(input$selected_reference_file, {
     if (nchar(input$selected_reference_file) == 0) {return()}
+    selections$reference_file <- input$selected_reference_file
     choices <- c(uploaded_files$reference$filename, uploaded_files$test$filename)
     index <- which(choices %in% input$selected_reference_file)
     dataset <- list(uploaded_files$reference, uploaded_files$test)[[index]]
@@ -115,6 +118,7 @@ server = function(input, output, session) {
   
   observeEvent(input$selected_test_file, {
     if (nchar(input$selected_test_file) == 0) {return()}
+    selections$test_file <- input$selected_test_file
     choices <- c(uploaded_files$reference$filename, uploaded_files$test$filename)
     index <- which(choices %in% input$selected_test_file)
     dataset <- list(uploaded_files$reference, uploaded_files$test)[[index]]

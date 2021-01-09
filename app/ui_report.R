@@ -35,7 +35,7 @@ reportServer <- function(id, outputfile, file_template, report) {
 
   
 # Test ------------------------------------------------------------------------
-#if (sys.nframe() == 0L) { # if __name__ == '__main__'
+if (sys.nframe() == 0L) { # if __name__ == '__main__'
   print("Run TEST VERSION")
   
   source('statistics.R')
@@ -74,7 +74,7 @@ reportServer <- function(id, outputfile, file_template, report) {
     data <- reactiveValues()
     analysis <- reactiveValues()
     
-    selections_performance <- c() # keys_default
+    selections_performance <- keys_default
     makeReactiveBinding("selections_performance")
     
     observeEvent(input$btn_createReactive, {
@@ -118,5 +118,5 @@ reportServer <- function(id, outputfile, file_template, report) {
   }
   
   shinyApp(ui, server)
-#}
+}
 
