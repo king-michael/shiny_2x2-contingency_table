@@ -264,7 +264,7 @@ server = function(input, output, session) {
     
     # draw the confusion matrix
     output$confusion_matrix <- renderTable(as.confusionmatrix(analysis$metrics), rownames=TRUE)
-    
+    doAnalysis <<- FALSE
   }, ignoreInit = TRUE)
   
   
