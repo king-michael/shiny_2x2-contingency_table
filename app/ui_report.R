@@ -45,16 +45,16 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
   ui <- fluidPage(
     actionButton("btn_createReactive", "DEBUG: create reactive Input"),
     fluidRow(
-      column(6,
-             reportUi("report_selected",
-                      label="Download",
-                      text="Download the report for the selected metrics.")
-             ),
-      column(6,
-             reportUi("report_full",
-                      label="Download Full Report",
-                      text="Download the full report (DOCX).")),
-    )
+      reportUi("report_selected",
+               label="Download",
+               text="Download the report for the selected metrics."
+      ),
+      hr(),
+      reportUi("report_full",
+               label="Download Full Report",
+               text="Download the full report (DOCX)."
+      ),
+    ) #fluidRow
   )
   
   server <- function(input, output, session) {

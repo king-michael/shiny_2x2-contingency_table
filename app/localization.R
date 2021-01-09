@@ -8,7 +8,7 @@ Localization <- R6Class("Localization",
     root_node=NULL,
     initialize = function(filename="localization.xml", language=NULL) {
       self$filename <- filename
-      self$tree <- read_xml("localization.xml")
+      self$tree <- xml2::read_xml(self$filename)
       self$root_node <- self$tree # Change for language settings
       if (!is.null(language)) {
         self$set_root_node(language)
