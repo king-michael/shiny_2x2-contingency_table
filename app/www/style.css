@@ -35,6 +35,13 @@
   margin-top: 2px;
 }
 
-.h1 {
-  margin-top: none;
+/* fix empty title for navbar */
+.navbar-header > .navbar-brand {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
+
+.h1 {
+  margin-top: 0;
+}
+

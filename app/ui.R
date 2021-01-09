@@ -33,19 +33,19 @@ ui = fluidPage(
     tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
   ),
   
-  titlePanel("Evaluate Test Method"),
+  titlePanel("Test Method Evaluator"),
   
-  navbarPage("Workflow", id='sidebar',
+  navbarPage(NULL, id='sidebar',
                #widths = c(2, 10),
-               selected = "Upload",
+               selected = "Input",
     
-  # section: Upload  ----------------------------------------------------------
+  # section: Input  ----------------------------------------------------------
   
-  tabPanel("Upload", wellPanel(
-    h1("Upload"),
+  tabPanel("Input", wellPanel(
+    h1("Input"),
     
     sidebarLayout(
-      # section: Upload : sidebarPanel ----------------------------------------
+      # section: Input : sidebarPanel ----------------------------------------
       sidebarPanel(
         
         fluidRow(
@@ -89,7 +89,7 @@ ui = fluidPage(
         ) # conditionalPanel
       ), # sidebarPanel
       
-      # section: Upload :mainPanel --------------------------------------------
+      # section: Input :mainPanel --------------------------------------------
       mainPanel(
         # Options Reference File ----------------------------------------------
         conditionalPanel(
@@ -174,7 +174,7 @@ ui = fluidPage(
   )), # tabPanel - section
   
   # section: Analysis ---------------------------------------------------------
-  tabPanel("Analysis",
+  tabPanel("Analysis", wellPanel(
      h1("Analysis"),
      fluidRow(
        column(4, tableOutput('confusion_matrix' )),
@@ -199,23 +199,23 @@ ui = fluidPage(
               ) # checkboxGroupButtons
        ), #column
      ) # fluidRow
-  ), # tabPanel
+  )), # tabPanel
   
   # section: Analysis ---------------------------------------------------------
   
-  tabPanel("Report",
+  tabPanel("Report", wellPanel(
      fluidRow(
-       column(6,
-              reportUi("report_selected",
-                       label="Download",
-                       text="Download the report for the selected metrics.")
-       ),
-       column(6,
-              reportUi("report_full",
-                       label="Download Full Report",
-                       text="Download the full report (DOCX).")),
+       reportUi("report_selected",
+                label="Download",
+                text="Download the report for the selected metrics."
+                ),
+       hr(),
+       reportUi("report_full",
+                label="Download Full Report",
+                text="Download the full report (DOCX)."
+                ),
      ) #fluidRow
-  ) # tabPanel
+  )) # tabPanel
   
   ) # navlistPanel
 )
