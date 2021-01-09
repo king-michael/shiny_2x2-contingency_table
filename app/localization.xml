@@ -1,5 +1,6 @@
 <localization>
   <metrics>
+    <metric abbrv="DEBUG" label="No metrics selected"></metric>
     <metric abbrv="TP"  label="True positive"></metric>
     <metric abbrv="TN"  label="True negative"></metric>
     <metric abbrv="FN"  label="False negative"></metric>
