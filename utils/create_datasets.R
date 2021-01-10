@@ -26,3 +26,54 @@ create_qualitative_testset <- function(n_samples, ratio_negative=0.2, pertubatio
   
   return(data.frame(reference=reference, test=test))
 }
+
+
+
+#' Create test set based on true_positive, true_negative, false_positive, false_negative values.
+#'
+#' @param true_positive Number of true positives. (integer)
+#' @param true_negative Number of true negatives. (integer)
+#' @param false_positive Number of false positives. (integer)
+#' @param false_negative Number of false negatives. (integer)
+#' @param shuffle : Boolean if the set should be shuffled or not. (logical)
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' df <- create_qualitative_testset.bymetrics(
+#' true_positive = 100,
+#' true_negative = 50,
+#' false_positive = 13,
+#' false_negative = 7
+#' )
+#' isTRUE(sum(df$reference) == (100 + 7))
+#' isTRUE(sum(!df$reference) == (50 + 13))
+#' isTRUE(sum(df$test) == (100 + 13))
+#' isTRUE(sum(!df$test) == (50 + 7))
+create_qualitative_testset.bymetrics <- function(true_positive,
+                                                 true_negative,
+                                                 false_positive,
+                                                 false_negative,
+                                                 shuffle = FALSE) {
+  reference <- c(
+    rep(TRUE, true_positive),
+    rep(FALSE, true_negative),
+    rep(TRUE, false_negative),
+    rep(FALSE, false_positive)
+  )
+  test <- c(
+    rep(TRUE, true_positive),
+    rep(FALSE, true_negative),
+    rep(FALSE, false_negative),
+    rep(TRUE, false_positive)
+  )
+  
+  if (shuffle) {
+    print("shuffle")
+    index <- sample(1:length(reference))
+    reference <- reference[index]
+    test <- test[index]
+  }
+  return(data.frame(reference = reference, test = test))
+}
