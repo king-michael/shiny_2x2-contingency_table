@@ -74,5 +74,10 @@
       The probability of a person who has the disease testing negative divided 
       by the probability of a person who does not have the disease testing negative.
     </metric>
+    <metric abbrv="CK" label="Cohen's kappa (κ)">
+      If the raters are in complete agreement then k = 1.
+      If there is no agreement among the raters other than what would be expected by chance, k = 0.
+      If the kappa is negative, the aggrement is worse than random. (Switch the labels...)
+    </metric>
   </metrics>
 </localization>

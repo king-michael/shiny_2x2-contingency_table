@@ -24,11 +24,8 @@ server = function(input, output, session) {
   js$disableTab("Analysis")
   js$disableTab("Report")
   
-  
   doAnalysis <- FALSE
   makeReactiveBinding("doAnalysis")
-  
-  
   
   uploaded_files <- reactiveValues(
     reference=list(
@@ -247,6 +244,8 @@ server = function(input, output, session) {
   outputOptions(output, 'upload_valid', suspendWhenHidden=FALSE)
   
   observeEvent(input$btn_analyze, {
+    print("run analysis")
+    print(doAnalysis)
     doAnalysis <<- TRUE
     js$enableTab("Analysis")
     js$enableTab("Report")
@@ -256,26 +255,27 @@ server = function(input, output, session) {
   #END: Upload files ----------------------------------------- Upload section #
   # section: Analysis ---------------------------------------------------------
   
-  
   env_anaylsis <- list2env(
     list(
-      keys = c("TPR", "TNR", "ACC", 'LR+', 'LR-', "PPV", "NPV", "FNR", "FPR", "FDR", "FOR", "F1", "MCC"),
+      keys = c("TPR", "TNR", "ACC", 'LR+', 'LR-', "PPV", "NPV", "FNR", "FPR", "FDR", "FOR", "F1", "MCC", "CK"),
       valid_ratios = c("TPR", "TNR", "PPV", "NPV", "FNR", "FPR", "FDR", "FOR"),
       valid_percentage = c("ACC"),
-      keys_default = keys_default <- c("TPR", "TNR", "ACC", 'LR+', 'LR-', "PPV", "NPV"),
-      labels = mapping_abbrv2label[keys], # unlist(mapping_abbrv2label[keys], use.names = FALSE)
-      tips = mapping_abbrv2tips[keys]
+      keys_default = keys_default <- c("TPR", "TNR", "ACC", 'LR+', 'LR-', "PPV", "NPV")
     ),
     parent = emptyenv()
   )
+  env_anaylsis$labels <- mapping_abbrv2label[env_anaylsis$keys] # unlist(mapping_abbrv2label[keys], use.names = FALSE)
+  env_anaylsis$tips <- mapping_abbrv2tips[env_anaylsis$keys]
   
+  # draw performance selections
   shinyWidgets::updateCheckboxGroupButtons(session, "performance-selected",
-                                           choiceNames = unlist(labels, use.names = FALSE),
+                                           choiceNames = unlist(env_anaylsis$labels, use.names = FALSE),
                                            choiceValues = env_anaylsis$keys,
                                            selected = env_anaylsis$keys_default,
                                            checkIcon = list(yes = icon("ok", lib = "glyphicon"))
   )
   
+  # create stprage for analysis
   analysis <- reactiveValues(
     selections_performance = env_anaylsis$keys_default,
     conf.level = 0.95,
@@ -293,21 +293,26 @@ server = function(input, output, session) {
     analysis$confidence_intervals <- do.call(calculate_confidence_intervals, 
                                              c(analysis$metrics, analysis$conf.level))
     
+    r <- add_additional_metrics(pm = analysis$performance_metrics,
+                                CI = analysis$confidence_intervals,
+                                df = data.frame(reference = data$reference,
+                                                test = data$test),
+                                conf.level = analysis$conf.level)
+    analysis$performance_metrics <- r$pm
+    analysis$confidence_intervals <- r$CI
+    
     # draw the confusion matrix
     output$confusion_matrix <- renderTable(as.confusionmatrix(analysis$metrics), rownames=TRUE)
     doAnalysis <<- FALSE
   }, ignoreInit = TRUE)
   
-  # section: Analysis : performance table -------------------------------------
-  
+  # draw performance table
   observe({
     req(analysis$performance_metrics, analysis$ratios, cancelOutput = TRUE)
     analysis$selections_performance <<- input[["performance-selected"]]
     
     performanceServer("performance", 
-                      selections_performance = analysis$selections_performance,
-                      performance_metrics = analysis$performance_metrics,
-                      ratios = analysis$ratios,
+                      analysis=analysis,
                       env=env_anaylsis)
     
   })

@@ -39,9 +39,7 @@ performanceUi <- function(id) {
 
 
 performanceServer <- function(id,
-                              selections_performance,
-                              performance_metrics,
-                              ratios,
+                              analysis,
                               env) {
     moduleServer(
       id,
@@ -52,18 +50,24 @@ performanceServer <- function(id,
         tips <- env$tips
         
         observe({
+          performance_metrics <- analysis$performance_metrics
+          ratios <- analysis$ratios
+          selections_performance <- analysis$selections_performance
+          confidence_intervals <- analysis$confidence_intervals
+          
           req(performance_metrics, ratios, cancelOutput = TRUE)
+          
           output$table <- DT::renderDataTable({
-            req(performance_metrics, ratios, cancelOutput = TRUE)
-            
             #selections_performance <- input$selected
             switch_ratio <- FALSE
             round_digits_percentage <- 2
             
-            
             if (length(selections_performance) == 0) {
               df = data.frame(metrics=c("No metric selected"), values=c(""))
             } else {
+              
+              CI <- confidence_intervals[selections_performance]
+
               if (switch_ratio) {
                 values <- performance_metrics[selections_performance]
                 values <- lapply(values, function(x){round(x, round_digits_percentage)})
@@ -82,22 +86,37 @@ performanceServer <- function(id,
                 if (length(keys_to_format) > 0) {
                   # multipy by 100 before rounding
                   values[keys_to_format] <- lapply(values[keys_to_format], function(x){x*100.0})
-                  values <- lapply(values, function(x){round(x, round_digits_percentage)})
+                  keys_to_format_CI <- intersect(keys_to_format, names(CI))
+                  CI[keys_to_format_CI] <- lapply(CI[keys_to_format_CI], function(x){x*100.0})
                   
-                  fmt <- paste0("%6.", round_digits_percentage, "f %%")
-                  values[keys_to_format] <- sprintf(fmt, values[keys_to_format])
+                  # round
+                  values <- lapply(values, function(x){round(x, round_digits_percentage)})
+                  # format
+                  #fmt <- paste0("%6.", round_digits_percentage, "f %%")
+                  #values[keys_to_format] <- sprintf(fmt, values[keys_to_format])
+                  
+                  values[keys_to_format] <- paste0(values[keys_to_format], '%')
                 } else {
                   values <- lapply(values, function(x){round(x, round_digits_percentage)})
                 }
               }
               
+              na_keys <- CI == "NULL"
+              CI[na_keys] <- ""
+              CI[!na_keys] <- lapply(CI[!na_keys], function(x){round(x, round_digits_percentage)})
+              CI[!na_keys] <- lapply(CI[!na_keys], function(x){sprintf("%s-%s", x[1], x[2])})
+              CI[keys_to_format_CI] <- paste0(CI[keys_to_format_CI], '%')
+
+              
               df = data.frame(
                 metrics =  unlist(labels[selections_performance], use.names = FALSE),
-                values = unlist(values, use.names = FALSE)
+                values = unlist(values, use.names = FALSE),
+                confidence =unlist(CI, use.names = FALSE)
               )
             }
-            
-            colnames(df) <- c("Metrics", "Values")
+            #browser()
+            conf <- round(analysis$conf.level*100)
+            colnames(df) <- c("Metrics", "Values", sprintf("confidence interval [%i%%]", conf))
             
             #tips <- labels
             tips <- tips[selections_performance]
@@ -106,8 +125,9 @@ performanceServer <- function(id,
               "var tips = [%s],
             firstColumn = $('#%s td:nth-child(1n+1)');
             for (var i = 0; i < tips.length; i++) {
-              $(firstColumn[2*i]).attr('title', tips[i]);
-              $(firstColumn[2*i+1]).attr('title', tips[i]);
+              $(firstColumn[3*i]).attr('title', tips[i]);
+              $(firstColumn[3*i+1]).attr('title', tips[i]);
+              $(firstColumn[3*i+2]).attr('title', tips[i]);
             }", tips, paste0(id, '-table')))
             
             DT::datatable(df, rownames=FALSE, callback=callback,
@@ -117,7 +137,7 @@ performanceServer <- function(id,
                                        paging=FALSE,
                                        info=FALSE,
                                        ordering=FALSE,
-                                       columnDefs=list(list(targets=1, class="dt-right")) 
+                                       columnDefs=list(list(targets=1:2, class="dt-right")) 
                           )
             ) # %>% DT::formatRound(c(2), 2)
           }, server=FALSE) #DT::renderDataTable
@@ -151,8 +171,6 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
   mapping_abbrv2label <- localization$get_map_attr2attr_from_xpath('metrics/metric', 'abbrv', 'label')
   mapping_abbrv2tips <- localization$get_map_attr2text_from_xpath('metrics/metric', 'abbrv', strip=TRUE)
 
-
-
   ui <- fluidPage(
     shinyjs::useShinyjs(),
     shinyjs::extendShinyjs(script = "utils.js",
@@ -172,14 +190,9 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
   server <- function(input, output, session) {
     # PREPROCESSING -------------------------------------------------------------
     # set the defaults 
-    
-    
-    
-    
+
     doAnalysis <- FALSE
     makeReactiveBinding("doAnalysis")
-    
-    
     
     # emulate reactive bindings
     data <- reactiveValues()
@@ -198,17 +211,18 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
     
     env_anaylsis <- list2env(
       list(
-        keys = c("TPR", "TNR", "ACC", 'LR+', 'LR-', "PPV", "NPV", "FNR", "FPR", "FDR", "FOR", "F1", "MCC"),
+        keys = c("TPR", "TNR", "ACC", 'LR+', 'LR-', "PPV", "NPV", "FNR", "FPR", "FDR", "FOR", "F1", "MCC", "CK"),
         valid_ratios = c("TPR", "TNR", "PPV", "NPV", "FNR", "FPR", "FDR", "FOR"),
         valid_percentage = c("ACC"),
-        keys_default = keys_default <- c("TPR", "TNR", "ACC", 'LR+', 'LR-', "PPV", "NPV"),
-        labels = mapping_abbrv2label[keys], # unlist(mapping_abbrv2label[keys], use.names = FALSE)
-        tips = mapping_abbrv2tips[keys]
-        ),
-      parent = emptyenv())
+        keys_default = keys_default <- c("TPR", "TNR", "ACC", 'LR+', 'LR-', "PPV", "NPV")
+      ),
+      parent = emptyenv()
+    )
+    env_anaylsis$labels <- mapping_abbrv2label[env_anaylsis$keys] # unlist(mapping_abbrv2label[keys], use.names = FALSE)
+    env_anaylsis$tips <- mapping_abbrv2tips[env_anaylsis$keys]
 
     shinyWidgets::updateCheckboxGroupButtons(session, "performance-selected",
-                                             choiceNames = unlist(labels, use.names = FALSE),
+                                             choiceNames = unlist(env_anaylsis$labels, use.names = FALSE),
                                              choiceValues = env_anaylsis$keys,
                                              selected = env_anaylsis$keys_default,
                                              checkIcon = list(yes = icon("ok", lib = "glyphicon"))
@@ -232,6 +246,14 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
       analysis$confidence_intervals <- do.call(calculate_confidence_intervals, 
                                                c(analysis$metrics, analysis$conf.level))
       
+      r <- add_additional_metrics(pm = analysis$performance_metrics,
+                                  CI = analysis$confidence_intervals,
+                                  df = data.frame(reference = data$reference,
+                                                  test = data$test),
+                                  conf.level = analysis$conf.level)
+      analysis$performance_metrics <- r$pm
+      analysis$confidence_intervals <- r$CI
+      
       # draw the confusion matrix
       output$confusion_matrix <- renderTable(as.confusionmatrix(analysis$metrics), rownames=TRUE)
       doAnalysis <<- FALSE
@@ -243,11 +265,7 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
       req(analysis$performance_metrics, analysis$ratios, cancelOutput = TRUE)
       analysis$selections_performance <<- input[["performance-selected"]]
       
-      performanceServer("performance", 
-                        selections_performance = analysis$selections_performance,
-                        performance_metrics = analysis$performance_metrics,
-                        ratios = analysis$ratios,
-                        env=env_anaylsis)
+      performanceServer("performance", analysis=analysis, env=env_anaylsis)
       
     })
     

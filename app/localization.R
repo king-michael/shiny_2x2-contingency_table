@@ -62,7 +62,7 @@ Localization <- R6Class("Localization",
       mapping <- as.list(setNames(values, keys))
       
       if (strip) {
-        mapping <- lapply(mapping, function(x){gsub("[ ]*\n[ ]*", "", x)})
+        mapping <- lapply(mapping, function(x){gsub("[ ]*\n[ ]*", " ", x)})
       }
       return(mapping)
     },

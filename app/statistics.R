@@ -1,3 +1,6 @@
+require(irr)
+require(GenBinomApps)
+
 
 #' Calculates the metrics of a confusion matrix from a reference and test vector.
 #'
@@ -216,7 +219,7 @@ calculate_confidence_intervals <- function(TP, TN, FP, FN,
     return(CI)
   }
   
-  standard.CI <- function(D, SE, z.score) {  }
+  standard.CI <- function(D, SE, z.score) { c(D-z.score*SE, D+z.score*SE) }
   standard.calculate_SE <- function(k, n) {
     D <- k / n
     SE <- sqrt((D*(1-D))/n)
@@ -234,11 +237,9 @@ calculate_confidence_intervals <- function(TP, TN, FP, FN,
     "LR+" = do.call(log.CI, list(TP, TN, FP, FN, 'LR+', z.score)),
     "LR-" = do.call(log.CI, list(TP, TN, FP, FN, 'LR-', z.score))
   )
-  
   for (key in setdiff(names(ratios), names(CI))) {
-    r <- 
     CI[[key]] <- standard.CI(D = pm[[key]],
-                             SE = do.call(calculate_SE.standard, ratios[[key]]),
+                             SE = do.call(standard.calculate_SE, ratios[[key]]),
                              z.score = z.score)
   }
   
@@ -246,4 +247,14 @@ calculate_confidence_intervals <- function(TP, TN, FP, FN,
   return(CI)
 }
 
+
+add_additional_metrics <- function(pm, CI, df, conf.level=0.95) {
+  alpha <- 1 - conf.level
+  
+  k <- psych::cohen.kappa(df, alpha=alpha)
+  pm[["CK"]] <- k$kappa
+  CI[["CK"]] <- unlist(k$confid[1,c(1,3)], use.names = FALSE)
+  
+  return(list(pm=pm, CI=CI))
+}
 
