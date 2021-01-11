@@ -1,22 +1,71 @@
 <localization>
   <metrics>
-    <metric abbrv="DEBUG" label="No metrics selected"></metric>
-    <metric abbrv="TP"  label="True positive"></metric>
-    <metric abbrv="TN"  label="True negative"></metric>
-    <metric abbrv="FN"  label="False negative"></metric>
-    <metric abbrv="FP"  label="False positive"></metric>
-    <metric abbrv="P"   label="condition positive"></metric>
-    <metric abbrv="N"   label="condition negative"></metric>
-    <metric abbrv="TPR" label="sensitivity"></metric>
-    <metric abbrv="TNR" label="specificity"></metric>
-    <metric abbrv="PPV" label="precision"></metric>
-    <metric abbrv="NPV" label="negative predictive value"></metric>
-    <metric abbrv="FNR" label="false negative rate"></metric>
-    <metric abbrv="FPR" label="false positive rate"></metric>
-    <metric abbrv="FDR" label="false discovery rate"></metric>
-    <metric abbrv="FOR" label="false omission rate"></metric>
-    <metric abbrv="ACC" label="accuracy"></metric>
-    <metric abbrv="F1"  label="F1 score"></metric>
-    <metric abbrv="MCC" label="Matthews correlation coefficient"></metric>
+    <metric abbrv="DEBUG" label="No metrics selected">
+      No metric was selected.
+    </metric>
+    <metric abbrv="TP"  label="True positive">
+      The test method correctly predicted a positive result.
+    </metric>
+    <metric abbrv="TN"  label="True negative">
+      The test method correctly predicted a negative result.
+    </metric>
+    <metric abbrv="FN"  label="False negative">
+      The test method wrongly predicted a negative result. It is actually positive. (Also: Type II error)
+    </metric>
+    <metric abbrv="FP"  label="False positive">
+      The test method wrongly predicted a positive result. It is actually negative. (Also: Type I error)
+    </metric>
+    <metric abbrv="P"   label="condition positive">
+      The number of real positive cases in the data.
+    </metric>
+    <metric abbrv="N"   label="condition negative">
+      The number of real negative cases in the data.
+    </metric>
+    <metric abbrv="prevalence" label="prevalence">
+      The proportion of positive results in the total population (measured samples).
+    </metric>
+    <metric abbrv="TPR" label="sensitivity">
+      The proportion of positives that are correctly identified. (Also: recall, hit rate, or true positive rate)
+    </metric>
+    <metric abbrv="TNR" label="specificity">
+      The proportion of negatives that are correctly identified. (Also: selectivity or true negative rate)
+    </metric>
+    <metric abbrv="PPV" label="positive predictive value">
+      The proportions of positive and negative results that are positive. (Also: precision)
+    </metric>
+    <metric abbrv="NPV" label="negative predictive value">
+      The proportions of positive and negative results that are negative.
+    </metric>
+    <metric abbrv="FNR" label="false negative rate">
+      The proportion of positives that are falsly identified as negative. (Also: miss rate)
+    </metric>
+    <metric abbrv="FPR" label="false positive rate">
+      The proportion of negatives that are falsly identified as positive. (Also: fall-out)
+    </metric>
+    <metric abbrv="FDR" label="false discovery rate">
+      The propotion of positives calls that are actually false positive.
+    </metric>
+    <metric abbrv="FOR" label="false omission rate">
+      The propotion of negative calls that are actually false negative.
+    </metric>
+    <metric abbrv="ACC" label="accuracy">
+      The propotion of correctly identified results.
+    </metric>
+    <metric abbrv="F1"  label="F1 score">
+      The F1 score is the harmonic mean of positive predictive value and sensitivity.
+      The highest possible value of an F-score is 1, 
+      indicating perfect precision and recall, 
+      and the lowest possible value is 0, 
+      if either the precision or the recall is zero
+      
+    </metric>
+    <metric abbrv="MCC" label="Matthews correlation coefficient">
+      A correlation coefficient between the reference and test results.
+      It returns a value between −1 and +1. 
+      A coefficient of +1 represents a perfect prediction,
+      0 no better than random prediction
+      and −1 indicates total disagreement between reference and test results.
+      (Also: phi coefficient)
+    </metric>
   </metrics>
 </localization>
