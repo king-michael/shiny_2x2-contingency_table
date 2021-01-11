@@ -67,5 +67,13 @@
       and −1 indicates total disagreement between reference and test results.
       (Also: phi coefficient)
     </metric>
+    <metric abbrv="LR+" label="positive likelihood ration">
+      The probability of a person who has the disease testing positive divided
+      by the probability of a person who does not have the disease testing positive.
+    </metric>
+    <metric abbrv="LR-" label="negative likelihood ration">
+      The probability of a person who has the disease testing negative divided 
+      by the probability of a person who does not have the disease testing negative.
+    </metric>
   </metrics>
 </localization>

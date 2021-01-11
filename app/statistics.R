@@ -65,23 +65,31 @@ calculate_MCC <- function(TP, TN, FP, FN) {
   return(MCC)
 }
 
+
+get_ratios <- function(TP, TN, FP, FN) {
+  ratios <- list(
+    TPR = list(k = TP, n = (TP + FN)), # true positive rate / recall / sensitivity
+    TNR = list(k = TN, n = (TN + FP)), # true negative rate / specificity / selectivity
+    ACC = list(k = (TP + TN), n = (TP + FN + TN + FP)), # accuracy
+    
+    "LR+" = list(k = (TP / (TP + FN)), n = (FP / (TN + FP))), # positive likelihood ratio
+    "LR-" = list(k = (FN / (TP + FN)), n = (TN / (TN + FP))), # positive likelihood ratio
+    
+    PPV = list(k = TP, n = (TP + FP)), # positive predictive value / precision
+    NPV = list(k = TN, n = (TN + FN)), # negative predictive value 
+    
+    FNR = list(k = FN, n = (TP + FN)), # miss rate or false negative rate
+    FPR = list(k = FP, n = (TN + FP)), # fall-out or false positive rate 
+    
+    FDR = list(k = FP, n = (FP + TP)), # false discovery rate
+    FOR = list(k = FN, n = (FN + TN)) # false omission rate
+  )
+}
+
 #' List with the individual functions 
 pm_functions <- list(
-  TPR = function(TP, TN, FP, FN) {TP / (TP + FN)}, # true positive rate / recall / sensitivity
-  TNR = function(TP, TN, FP, FN) {TN / (TN + FP)}, # true negative rate / specificity / selectivity
-  ACC = function(TP, TN, FP, FN) {(TP + TN) / (TP + FN + TN + FP)}, # accuracy
-
-  PPV = function(TP, TN, FP, FN) {TP / (TP + FP)}, # positive predictive value / precision
-  NPV = function(TP, TN, FP, FN) {TN / (TN + FN)}, # negative predictive value 
-  
-  FNR = function(TP, TN, FP, FN) {FN / (TP + FN)}, # miss rate or false negative rate
-  FPR = function(TP, TN, FP, FN) {FP / (TN + FP)}, # fall-out or false positive rate 
-
-  FDR = function(TP, TN, FP, FN) {FP / (FP + TP)}, # false discovery rate
-  FOR = function(TP, TN, FP, FN) {FN / (FN + TN)}, # false omission rate
-
   F1 = function(TP, TN, FP, FN) {(2 * TP) / (2*TP + FP + FN)}, # F1 score
-  MCC = calculate_MCC
+  MCC = calculate_MCC # Matthews correlation coefficient
 )
 
 
@@ -104,7 +112,9 @@ calculate_performance_metrics <- function(TP, TN, FP, FN) {
     TP = TP, TN = TN, FN = FN, FP = FP,
     P = P, N = N
   )
+  pm <- append(pm, lapply(get_ratios(TP, TN, FP, FN), function(r){r$k / r$n}))
   pm <- append(pm, lapply(pm_functions, function(FUNC){FUNC(TP, TN, FP, FN)}))
+  
   return(pm)
 }
 # calculate_performance_metrics.old <- function(TP, TN, FP, FN) {
@@ -129,3 +139,4 @@ calculate_performance_metrics <- function(TP, TN, FP, FN) {
 #   
 #   return(metrics)
 # }
+
