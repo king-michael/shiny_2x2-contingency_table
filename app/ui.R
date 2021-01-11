@@ -178,7 +178,9 @@ ui = fluidPage(
   tabPanel("Analysis", wellPanel(
      h1("Analysis"),
      fluidRow(
-       column(4, tableOutput('confusion_matrix' )),
+       column(4, 
+              tableOutput('confusion_matrix' ),
+              verbatimTextOutput("text", placeholder = TRUE)),
        performanceUi("performance")
      ) # fluidRow
   )), # tabPanel

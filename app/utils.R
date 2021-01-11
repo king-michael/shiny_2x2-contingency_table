@@ -1,4 +1,4 @@
-
+require(brew)
 
 is_valid_column <- function(values) {
   # short sample to speed up big datasets
@@ -66,4 +66,12 @@ convert_df_to_boolean <- function(df, true_value = NULL){
   }
   
   return(df)
+}
+
+
+form = function(s,...){
+  s = gsub("\\}", "%>", gsub("\\{","<%=",s))
+  e = as.environment(list(...))
+  parent.env(e)=.GlobalEnv
+  brew::brew(text=s, envir=e)
 }

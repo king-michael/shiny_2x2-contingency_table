@@ -317,6 +317,67 @@ server = function(input, output, session) {
     
   })
   
+  observe({
+    output$text<- renderPrint({
+      req(data$reference, 
+          analysis$performance_metrics,
+          analysis$confidence_intervals,
+          cancelOutput = TRUE)
+      
+      pm <- analysis$performance_metrics
+      CI <- analysis$confidence_intervals
+      if (is.null(CI$CK)) { return() }
+      form_CI <- function(x) {sprintf("%s-%s", x[1], x[2])}
+      
+      n_samples <- length(data$reference)
+      n_pos <- sum(data$reference)
+      n_neg <- sum(!data$reference)
+      n_pos_test <- sum(data$test)
+      n_neg_test <- sum(!data$test)
+      text <- form("Reference method
+---------------------------------
+N_samples : {n_samples} 
+positive/negative : {n_pos}/{n_neg} ({p_pos}/{p_neg}%)
+ 
+Test method
+---------------------------------
+N_samples : {n_samples} 
+positive/negative : {n_pos_test}/{n_neg_test} ({p_pos_test}/{p_neg_test}%)
+ 
+ 
+FDA required metrics (CI={conf.level}%)
+---------------------------------
+sensitivity : {TPR}% CI: {CI_TPR}%
+sensitivity : {TNR}% CI: {CI_TNR}%
+accuracy    : {ACC}% CI: {CI_ACC}%
+
+LR+         : {LRp} CI: {CI_LRp}
+LR-         : {LRn} CI: {CI_LRn}
+
+Performance measure
+---------------------------------
+                                  (1 is the best, 0 is random)
+Cohen's kappa (k)                : {CK} CI: {CI_CK} 
+Matthews correlation coefficient : {MCC} CI:
+", n_samples=n_samples,
+                   n_pos=n_pos, p_pos=round(n_pos/n_samples*100),
+                   n_neg=n_neg, p_neg=round(n_neg/n_samples*100),
+                   n_pos_test=n_pos_test, p_pos_test=round(n_pos_test/n_samples*100),
+                   n_neg_test=n_neg_test, p_neg_test=round(n_neg_test/n_samples*100),
+                   conf.level=round(100*analysis$conf.level),
+                   TPR=sprintf("%6.2f", round(pm$TPR*100, 2)), CI_TPR=form_CI(round(CI$TPR*100, 2)),
+                   TNR=sprintf("%6.2f", round(pm$TNR*100, 2)), CI_TNR=form_CI(round(CI$TNR*100, 2)),
+                   ACC=sprintf("%6.2f", round(pm$ACC*100, 2)), CI_ACC=form_CI(round(CI$ACC*100, 2)),
+                   LRp=sprintf("%6.2f", round(pm[['LR+']], 2)), CI_LRp=form_CI(round(CI[['LR-']], 2)),
+                   LRn=sprintf("%6.2f", round(pm[['LR-']], 2)), CI_LRn=form_CI(round(CI[['LR-']], 2)),
+                   CK=sprintf("%6.3f", round(pm$CK, 2)), CI_CK=form_CI(round(CI$CK, 3)),
+                   MCC=sprintf("%6.3f", round(pm$MCC, 2))
+      )
+      
+    })
+  })
+
+
   # section: Report -----------------------------------------------------------
   
   report <- reactive({
