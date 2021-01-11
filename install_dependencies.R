@@ -1,6 +1,6 @@
 
 packages <- c("shiny", "shinyWidgets", "shinyjs",
-              "irr", "GenBinomApps", 
+              "irr", "GenBinomApps", "psych",
               "MazamaCoreUtils", 
               "R6", "xml2",
               "WordR", "flextable", "officer", "tidyverse")
