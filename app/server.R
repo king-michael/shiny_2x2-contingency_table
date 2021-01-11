@@ -9,10 +9,17 @@ logger.setup(infoLog="server.log")
 source('utils.R')
 source('statistics.R')
 source('localization.R')
+source('ui_report.R')
+source('ui_analysis.R')
 
-localization <- Localization$new("localization.xml")
 
 server = function(input, output, session) {
+  
+  localization <- Localization$new("localization.xml")
+  mapping_abbrv2label <- localization$get_map_attr2attr_from_xpath('metrics/metric', 'abbrv', 'label')
+  mapping_abbrv2tips <- localization$get_map_attr2text_from_xpath('metrics/metric', 'abbrv', strip = TRUE)
+  
+  
   # disable tab2 on page load
   js$disableTab("Analysis")
   js$disableTab("Report")
@@ -248,80 +255,61 @@ server = function(input, output, session) {
   
   #END: Upload files ----------------------------------------- Upload section #
   # section: Analysis ---------------------------------------------------------
-
-  mapping_abbrv2label <- localization$get_map_attr2attr_from_xpath('metrics/metric', 'abbrv', 'label')
-  mapping_abbrv2tips <- localization$get_map_attr2text_from_xpath('metrics/metric', 'abbrv')
   
-  keys <- c("TPR", "TNR", "PPV", "NPV", "FNR", "FPR", "FDR", "FOR", "ACC", "F1", "MCC")
-  keys_default <- c("TPR", "TNR", "PPV", "ACC")
   
-  labels <- mapping_abbrv2label[keys] # unlist(mapping_abbrv2label[keys], use.names = FALSE)
-  tips <- mapping_abbrv2tips[keys]
+  env_anaylsis <- list2env(
+    list(
+      keys = c("TPR", "TNR", "ACC", 'LR+', 'LR-', "PPV", "NPV", "FNR", "FPR", "FDR", "FOR", "F1", "MCC"),
+      valid_ratios = c("TPR", "TNR", "PPV", "NPV", "FNR", "FPR", "FDR", "FOR"),
+      valid_percentage = c("ACC"),
+      keys_default = keys_default <- c("TPR", "TNR", "ACC", 'LR+', 'LR-', "PPV", "NPV"),
+      labels = mapping_abbrv2label[keys], # unlist(mapping_abbrv2label[keys], use.names = FALSE)
+      tips = mapping_abbrv2tips[keys]
+    ),
+    parent = emptyenv()
+  )
   
-  analysis <- reactiveValues( )
+  shinyWidgets::updateCheckboxGroupButtons(session, "performance-selected",
+                                           choiceNames = unlist(labels, use.names = FALSE),
+                                           choiceValues = env_anaylsis$keys,
+                                           selected = env_anaylsis$keys_default,
+                                           checkIcon = list(yes = icon("ok", lib = "glyphicon"))
+  )
+  
+  analysis <- reactiveValues(
+    selections_performance = env_anaylsis$keys_default,
+    conf.level = 0.95,
+    metrics = NULL,
+    performance_metrics = NULL,
+    ratios = NULL
+  )
   
   # calculate the values
   observeEvent(doAnalysis, {
     analysis$metrics <- calculate_metrics(data$reference, data$test)
-    analysis$performance_metrics <- do.call(calculate_performance_metrics, analysis$metrics)
+    analysis$ratios <- do.call(get_ratios, analysis$metrics)
     
+    analysis$performance_metrics <- do.call(calculate_performance_metrics, analysis$metrics)
+    analysis$confidence_intervals <- do.call(calculate_confidence_intervals, 
+                                             c(analysis$metrics, analysis$conf.level))
     
     # draw the confusion matrix
     output$confusion_matrix <- renderTable(as.confusionmatrix(analysis$metrics), rownames=TRUE)
     doAnalysis <<- FALSE
   }, ignoreInit = TRUE)
   
-  
   # section: Analysis : performance table -------------------------------------
-  selections_performance <- keys_default
-  makeReactiveBinding("selections_performance")
   
   observe({
-    output$table_performance <- DT::renderDataTable({
-      selections_performance <<- input$selected_performance
-      
-      if (length(selections_performance) == 0) {
-        df = data.frame(metrics=c("No metric selected"), values=c(""))
-      } else {
-        df = data.frame(
-          metrics =  unlist(labels[selections_performance], use.names = FALSE),
-          values = unlist(analysis$performance_metrics[selections_performance], use.names = FALSE)
-        )
-      }
-      
-      colnames(df) <- c("Metrics", "Values")
-      tips <- labels # DEBUG
-      tips <- tips[selections_performance]
-      tips <- paste(paste0("'", tips, "'"), collapse=", ")
-      callback = DT::JS(sprintf(
-        "var tips = [%s],
-      firstColumn = $('#%s td:nth-child(1n+1)');
-      for (var i = 0; i < tips.length; i++) {
-        $(firstColumn[2*i]).attr('title', tips[i]);
-        $(firstColumn[2*i+1]).attr('title', tips[i]);
-      }", tips, 'table_performance'))
-      
-      DT::datatable(df, rownames=FALSE, callback=callback,
-                    selection=list(mode="none", target="row"),
-                    options=list(dom='t', searching=FALSE, paging=FALSE, info=FALSE, ordering=FALSE)
-      ) %>% DT::formatRound(c(2), 2)
-    }, server=FALSE)
-  })
-
-  shinyWidgets::updateCheckboxGroupButtons(session, "selected_performance",
-                                           choiceNames = unlist(labels, use.names = FALSE),
-                                           choiceValues = keys,
-                                           selected = keys_default,
-                                           checkIcon = list(yes = icon("ok", lib = "glyphicon"))
-  )
-  
-  # toggle performance selection
-  observeEvent(input$toggle_performance, {
-    if (input$toggle_performance) {
-      shinyjs::showElement("selected_performance")
-    } else {
-      shinyjs::hideElement("selected_performance")
-    }
+    req(analysis$performance_metrics, analysis$ratios, cancelOutput = TRUE)
+    analysis$selections_performance <<- input[["performance-selected"]]
+    
+    performanceServer("performance", 
+                      selections_performance = analysis$selections_performance,
+                      performance_metrics = analysis$performance_metrics,
+                      ratios = analysis$ratios,
+                      env=env_anaylsis)
+    
   })
   
   # section: Report -----------------------------------------------------------

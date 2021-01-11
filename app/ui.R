@@ -4,6 +4,7 @@ require(shinyWidgets)
 
 
 source('ui_report.R')
+source('ui_analysis.R')
 
 labelWithTooltip <- function(text, ..., tooltip = NULL, required = FALSE) {
   text <- paste0(text, paste0(...))
@@ -178,26 +179,7 @@ ui = fluidPage(
      h1("Analysis"),
      fluidRow(
        column(4, tableOutput('confusion_matrix' )),
-       column(4, 
-              DT::dataTableOutput('table_performance'),
-              shinyWidgets::materialSwitch(
-                inputId = "toggle_performance",
-                label = "Change Metrics", 
-                value = FALSE,
-                status = "info"
-              ), # materialSwitch
-              ),
-       column(4,
-              shinyWidgets::checkboxGroupButtons(
-                inputId = "selected_performance",
-                label = "Select performance metrics",
-                choices = c("DEBUG"),
-                selected = 1,
-                justified = TRUE,
-                direction = "vertical",
-                checkIcon = list(yes = icon("ok", lib = "glyphicon"))
-              ) # checkboxGroupButtons
-       ), #column
+       performanceUi("performance")
      ) # fluidRow
   )), # tabPanel
   
