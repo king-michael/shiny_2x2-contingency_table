@@ -56,22 +56,21 @@
       The highest possible value of an F-score is 1, 
       indicating perfect precision and recall, 
       and the lowest possible value is 0, 
-      if either the precision or the recall is zero
-      
+      if either the precision or the recall is zero.
     </metric>
     <metric abbrv="MCC" label="Matthews correlation coefficient">
       A correlation coefficient between the reference and test results.
-      It returns a value between −1 and +1. 
+      It returns a value between -1 and +1. 
       A coefficient of +1 represents a perfect prediction,
       0 no better than random prediction
-      and −1 indicates total disagreement between reference and test results.
+      and -1 indicates total disagreement between reference and test results.
       (Also: phi coefficient)
     </metric>
-    <metric abbrv="LR+" label="positive likelihood ration">
+    <metric abbrv="LR+" label="positive likelihood ratio">
       The probability of a person who has the disease testing positive divided
       by the probability of a person who does not have the disease testing positive.
     </metric>
-    <metric abbrv="LR-" label="negative likelihood ration">
+    <metric abbrv="LR-" label="negative likelihood ratio">
       The probability of a person who has the disease testing negative divided 
       by the probability of a person who does not have the disease testing negative.
     </metric>

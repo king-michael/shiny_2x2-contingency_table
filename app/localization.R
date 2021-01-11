@@ -55,17 +55,21 @@ Localization <- R6Class("Localization",
       mapping <- self$get_map_attr2attr_from_nodes(nodes, key_attr, value_attr)
       return(mapping)
     },
-    get_map_attr2text_from_nodes = function(nodes, key_attr) {
+    get_map_attr2text_from_nodes = function(nodes, key_attr, strip=FALSE) {
       # returns a mapping from key_attr to text along a node
       keys <- sapply(nodes, function(node){xml_attr(node, key_attr)})
       values <- sapply(nodes, xml_text)
       mapping <- as.list(setNames(values, keys))
+      
+      if (strip) {
+        mapping <- lapply(mapping, function(x){gsub("[ ]*\n[ ]*", "", x)})
+      }
       return(mapping)
     },
-    get_map_attr2text_from_xpath = function(xpath, key_attr) {
+    get_map_attr2text_from_xpath = function(xpath, key_attr, strip=FALSE) {
       # returns a mapping from key_attr to text along nodes
       nodes <- self$get_nodes(xpath)
-      mapping <- self$get_map_attr2text_from_nodes(nodes, key_attr)
+      mapping <- self$get_map_attr2text_from_nodes(nodes, key_attr, strip)
       return(mapping)
     }
   ) # public
