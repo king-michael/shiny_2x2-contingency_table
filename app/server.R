@@ -381,7 +381,7 @@ Matthews correlation coefficient : {MCC} CI:
   # section: Report -----------------------------------------------------------
   
   report <- reactive({
-    create_report_list(analysis$metrics, analysis$performance_metrics, keys)
+    create_report_list(analysis, env_anaylsis$keys)
   })
   
   reportServer(
@@ -392,7 +392,7 @@ Matthews correlation coefficient : {MCC} CI:
   )
   
   report_selected <- reactive({
-    create_report_list(analysis$metrics, analysis$performance_metrics, selections_performance)
+    create_report_list(analysis, analysis$selections_performance)
   })
   
   reportServer(

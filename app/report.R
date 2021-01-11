@@ -42,12 +42,26 @@ create_ft_confusion_matrix <- function(metrics) {
   return(ft)
 }
 
-create_ft_performance_table <- function(performance_metrics, selected = c("TPR", "TNR", "PPV", "ACC")) {
+create_ft_performance_table <- function(performance_metrics,
+                                        confidence_intervals,
+                                        conf.level=0.95,
+                                        selected = c("TPR", "TNR", "PPV", "ACC")) {
+  
+  CI <- confidence_intervals[selected]
+  round_digits_percentage <- 4
+  na_keys <- CI == "NULL"
+  CI[na_keys] <- ""
+  CI[!na_keys] <- lapply(CI[!na_keys], function(x){round(x, round_digits_percentage)})
+  CI[!na_keys] <- lapply(CI[!na_keys], function(x){sprintf("%s-%s", x[1], x[2])})
+  #CI[keys_to_format_CI] <- paste0(CI[keys_to_format_CI], '%')
+  
+
   df = data.frame(
     metrics =  unlist(mapping_abbrv2label[selected], use.names = FALSE),
-    values = unlist(performance_metrics[selected], use.names = FALSE)
+    values = unlist(performance_metrics[selected], use.names = FALSE),
+    CI = unlist(CI, use.names = FALSE)
   )
-  colnames(df) <- c("Metrics", "Values")
+  colnames(df) <- c("Metrics", "Values", sprintf("CI [%i%%]", round(conf.level*100)))
   ft <- df %>%
     flextable() %>%
     theme_zebra(odd_body = "#DEEAF6",odd_header = "#5B9BD5") %>%
@@ -56,22 +70,30 @@ create_ft_performance_table <- function(performance_metrics, selected = c("TPR",
   return(ft)
 }
 
-create_report_list <- function(metrics, 
-                               performance_metrics, 
+create_report_list <- function(analysis,
                                selections_performance, 
                                username=Sys.info()[["user"]]) {
+  
+  metrics <- analysis$metrics
+  performance_metrics <- analysis$performance_metrics
+  confidence_intervals <- analysis$confidence_intervals
+  conf.level <- analysis$conf.level
   
   if (is.null(selections_performance)) {
     performance_metrics$DEBUG <- ""
     selections_performance <- c('DEBUG')
   }
+  
   report = list(
     date = format(Sys.time(), format = "%x %H:%M %Z"),
     username = username,
     FT = list(
       ft_input = create_ft_confusion_matrix(metrics),
       ft_error_matrix = create_ft_confusion_matrix(metrics),
-      ft_performance = create_ft_performance_table(performance_metrics, selected = selections_performance)
+      ft_performance = create_ft_performance_table(performance_metrics, 
+                                                   confidence_intervals,
+                                                   conf.level=conf.level,
+                                                   selected = selections_performance)
     )
   )
 }

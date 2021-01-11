@@ -70,9 +70,27 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
     labels <- mapping_abbrv2label[keys] # unlist(mapping_abbrv2label[keys], use.names = FALSE)
     tips <- mapping_abbrv2tips[keys]
     
+    env_anaylsis <- list2env(
+      list(
+        keys = c("TPR", "TNR", "ACC", 'LR+', 'LR-', "PPV", "NPV", "FNR", "FPR", "FDR", "FOR", "F1", "MCC", "CK"),
+        valid_ratios = c("TPR", "TNR", "PPV", "NPV", "FNR", "FPR", "FDR", "FOR"),
+        valid_percentage = c("ACC"),
+        keys_default = keys_default <- c("TPR", "TNR", "ACC", 'LR+', 'LR-', "PPV", "NPV")
+      ),
+      parent = emptyenv()
+    )
+    env_anaylsis$labels <- mapping_abbrv2label[env_anaylsis$keys] # unlist(mapping_abbrv2label[keys], use.names = FALSE)
+    env_anaylsis$tips <- mapping_abbrv2tips[env_anaylsis$keys]
+    
     # emulate reactive bindings
     data <- reactiveValues()
-    analysis <- reactiveValues()
+    analysis <- reactiveValues(
+      selections_performance = env_anaylsis$keys_default,
+      conf.level = 0.95,
+      metrics = NULL,
+      performance_metrics = NULL,
+      ratios = NULL
+    )
     
     selections_performance <- keys_default
     makeReactiveBinding("selections_performance")
@@ -87,13 +105,22 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
   
       analysis$metrics <- calculate_metrics(data$reference, data$test)
       analysis$performance_metrics <- do.call(calculate_performance_metrics, analysis$metrics)
+      analysis$confidence_intervals <- do.call(calculate_confidence_intervals, 
+                                               c(analysis$metrics, analysis$conf.level))
+      
+      r <- add_additional_metrics(pm = analysis$performance_metrics,
+                                  CI = analysis$confidence_intervals,
+                                  df = data.frame(reference = data$reference,
+                                                  test = data$test),
+                                  conf.level = analysis$conf.level)
+      analysis$performance_metrics <- r$pm
+      analysis$confidence_intervals <- r$CI
     })
     
     # Testing -------------------------------------------------------------------
     
     report <- reactive({
-      print("HERE")
-      create_report_list(analysis$metrics, analysis$performance_metrics, keys)
+      create_report_list(analysis, env_anaylsis$keys)
     })
     
     reportServer(
@@ -104,7 +131,7 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
     )
     
     report_selected <- reactive({
-      create_report_list(analysis$metrics, analysis$performance_metrics, selections_performance)
+      create_report_list(analysis, selections_performance)
     })
     
     reportServer(
