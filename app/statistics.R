@@ -73,7 +73,7 @@ get_ratios <- function(TP, TN, FP, FN) {
     ACC = list(k = (TP + TN), n = (TP + FN + TN + FP)), # accuracy
     
     "LR+" = list(k = (TP / (TP + FN)), n = (FP / (TN + FP))), # positive likelihood ratio
-    "LR-" = list(k = (FN / (TP + FN)), n = (TN / (TN + FP))), # positive likelihood ratio
+    "LR-" = list(k = (FN / (TP + FN)), n = (TN / (TN + FP))), # negative likelihood ratio
     
     PPV = list(k = TP, n = (TP + FP)), # positive predictive value / precision
     NPV = list(k = TN, n = (TN + FN)), # negative predictive value 
@@ -84,6 +84,7 @@ get_ratios <- function(TP, TN, FP, FN) {
     FDR = list(k = FP, n = (FP + TP)), # false discovery rate
     FOR = list(k = FN, n = (FN + TN)) # false omission rate
   )
+  return(ratios)
 }
 
 #' List with the individual functions 
@@ -139,4 +140,110 @@ calculate_performance_metrics <- function(TP, TN, FP, FN) {
 #   
 #   return(metrics)
 # }
+
+
+#' Map a, b, c, d to TP, TN, FP, FN
+#'     +   -          +    -
+#' + | a | b |    + | TP | FP |
+#'   |---+---| ->   |----+----|
+#' - | c | d |    - | FN | TN |
+#' 
+#' @param a 
+#' @param b 
+#' @param c 
+#' @param d 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+map_abcd2names <- function(a,b,c,d) {
+  list(TP=a, TN=d, FP=b, FN=c)
+}
+
+
+#' Calculate the confidence intervals of the different performance measures
+#'
+#' @param TP True positive (integer)
+#' @param TN True negative (integer)
+#' @param FP False positive (integer)
+#' @param FN False negative (integer)
+#' @param conf.level 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+calculate_confidence_intervals <- function(TP, TN, FP, FN, 
+                                           conf.level = 0.95) {
+  
+  alpha <- 1 - conf.level
+  z.score <- qnorm(1-alpha/2)
+
+  clopper.pearson <- function(k, n, alpha) {
+    r <- GenBinomApps::clopper.pearson.ci(k, n, alpha=alpha, CI="two.sided")
+    CI <- c(r$Lower.limit, r$Upper.limit)
+    return(CI)
+  }
+  
+  log.CI <- function(TP, TN, FP, FN, key, z.score) {
+    
+    # check proposed by altman p110
+    if (any(TP == 0, FP == 0, FN == 0, TN==0)) {
+      TN <- TN+0.5
+      FP <- FP+0.5
+      FN <- FN+0.5
+      TN <- TN+0.5
+    }
+    
+    list_D <- list(
+      "LR+" = ( (TP / (TP+FN)) / (FP / (TN+FP)) ), # positive likelihood ratio
+      "LR-" = ( (FN / (TP+FN)) / (TN / (TN+FP)) )  # negative likelihood ratio
+    )
+    list_SE <- list(
+      "LR+" = sqrt(1/TP - 1/(TP+FN) + 1/FP - 1/(FP+TN)),# positive likelihood ratio
+      "LR-" = sqrt(1/FN - 1/(TP+FN) + 1/TN - 1/(FP+TN)) # negative likelihood ratio
+    )
+    if (!(key %in% names(list_D)) || !(key %in% names(list_SE))) {
+      stop("ERROR : no forumal for this key")
+    }
+    
+    D <- list_D[[key]]
+    SE <- list_SE[[key]]
+    
+    CI <- exp(c(log(D)-z.score*SE, log(D)+z.score*SE))
+    
+    return(CI)
+  }
+  
+  standard.CI <- function(D, SE, z.score) {  }
+  standard.calculate_SE <- function(k, n) {
+    D <- k / n
+    SE <- sqrt((D*(1-D))/n)
+    return(SE)
+  }
+  
+  ratios <- get_ratios(TP, TN, FP, FN)
+  pm <- calculate_performance_metrics(TP, TN, FP, FN)
+  
+  CI <- list(
+    TPR = do.call(clopper.pearson, c(ratios$TPR, alpha)),
+    TNR = do.call(clopper.pearson, c(ratios$TNR, alpha)),
+    ACC = do.call(clopper.pearson, c(ratios$ACC, alpha)),
+    
+    "LR+" = do.call(log.CI, list(TP, TN, FP, FN, 'LR+', z.score)),
+    "LR-" = do.call(log.CI, list(TP, TN, FP, FN, 'LR-', z.score))
+  )
+  
+  for (key in setdiff(names(ratios), names(CI))) {
+    r <- 
+    CI[[key]] <- standard.CI(D = pm[[key]],
+                             SE = do.call(calculate_SE.standard, ratios[[key]]),
+                             z.score = z.score)
+  }
+  
+  
+  return(CI)
+}
+
 
