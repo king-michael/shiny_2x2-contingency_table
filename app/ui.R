@@ -179,13 +179,14 @@ ui = fluidPage(
      h1("Analysis"),
      fluidRow(
        column(4, 
+              h4("2x2 contingency table"),
               tableOutput('confusion_matrix' ),
               verbatimTextOutput("text", placeholder = TRUE)),
        performanceUi("performance")
      ) # fluidRow
   )), # tabPanel
   
-  # section: Analysis ---------------------------------------------------------
+  # section: Report ---------------------------------------------------------
   
   tabPanel("Report", wellPanel(
      fluidRow(

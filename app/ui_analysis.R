@@ -13,27 +13,30 @@ source('localization.R')
 performanceUi <- function(id) {
   ns <- NS(id)
   
-  tagList(
-    column(4, 
-           DT::dataTableOutput(ns('table')),
-           shinyWidgets::materialSwitch(
-             inputId = ns("toggle_selection"),
-             label = "Change Metrics", 
-             value = FALSE,
-             status = "info"
-           ), # materialSwitch
-    ),
-    column(4,
-           shinyWidgets::checkboxGroupButtons(
-             inputId = ns("selected"),
-             label = "Select performance metrics",
-             choices = c("DEBUG"),
-             selected = 1,
-             justified = TRUE,
-             direction = "vertical",
-             checkIcon = list(yes = icon("ok", lib = "glyphicon"))
-           ) # checkboxGroupButtons
-    )
+  column(8,
+    fluidRow(column(4, h4("Performance measures"))),
+    fluidRow(
+      column(4, 
+             DT::dataTableOutput(ns('table')),
+             shinyWidgets::materialSwitch(
+               inputId = ns("toggle_selection"),
+               label = "Change Metrics", 
+               value = FALSE,
+               status = "info"
+             ), # materialSwitch
+      ), # column
+      column(4,
+             shinyWidgets::checkboxGroupButtons(
+               inputId = ns("selected"),
+               label = "Select performance metrics",
+               choices = c("DEBUG"),
+               selected = 1,
+               justified = TRUE,
+               direction = "vertical",
+               checkIcon = list(yes = icon("ok", lib = "glyphicon"))
+             ) # checkboxGroupButtons
+      ) # column
+    ) # fluidRow
   ) # tagList
 } # reportUi
 

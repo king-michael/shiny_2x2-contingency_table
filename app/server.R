@@ -244,8 +244,6 @@ server = function(input, output, session) {
   outputOptions(output, 'upload_valid', suspendWhenHidden=FALSE)
   
   observeEvent(input$btn_analyze, {
-    print("run analysis")
-    print(doAnalysis)
     doAnalysis <<- TRUE
     js$enableTab("Analysis")
     js$enableTab("Report")
@@ -348,7 +346,7 @@ positive/negative : {n_pos_test}/{n_neg_test} ({p_pos_test}/{p_neg_test}%)
 FDA required metrics (CI={conf.level}%)
 ---------------------------------
 sensitivity : {TPR}% CI: {CI_TPR}%
-sensitivity : {TNR}% CI: {CI_TNR}%
+specificity : {TNR}% CI: {CI_TNR}%
 accuracy    : {ACC}% CI: {CI_ACC}%
 
 LR+         : {LRp} CI: {CI_LRp}
@@ -358,7 +356,7 @@ Performance measure
 ---------------------------------
                                   (1 is the best, 0 is random)
 Cohen's kappa (k)                : {CK} CI: {CI_CK} 
-Matthews correlation coefficient : {MCC} CI:
+Matthews correlation coefficient : {MCC}
 ", n_samples=n_samples,
                    n_pos=n_pos, p_pos=round(n_pos/n_samples*100),
                    n_neg=n_neg, p_neg=round(n_neg/n_samples*100),
