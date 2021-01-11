@@ -65,6 +65,25 @@ calculate_MCC <- function(TP, TN, FP, FN) {
   return(MCC)
 }
 
+#' List with the individual functions 
+pm_functions <- list(
+  TPR = function(TP, TN, FP, FN) {TP / (TP + FN)}, # true positive rate / recall / sensitivity
+  TNR = function(TP, TN, FP, FN) {TN / (TN + FP)}, # true negative rate / specificity / selectivity
+  ACC = function(TP, TN, FP, FN) {(TP + TN) / (TP + FN + TN + FP)}, # accuracy
+
+  PPV = function(TP, TN, FP, FN) {TP / (TP + FP)}, # positive predictive value / precision
+  NPV = function(TP, TN, FP, FN) {TN / (TN + FN)}, # negative predictive value 
+  
+  FNR = function(TP, TN, FP, FN) {FN / (TP + FN)}, # miss rate or false negative rate
+  FPR = function(TP, TN, FP, FN) {FP / (TN + FP)}, # fall-out or false positive rate 
+
+  FDR = function(TP, TN, FP, FN) {FP / (FP + TP)}, # false discovery rate
+  FOR = function(TP, TN, FP, FN) {FN / (FN + TN)}, # false omission rate
+
+  F1 = function(TP, TN, FP, FN) {(2 * TP) / (2*TP + FP + FN)}, # F1 score
+  MCC = calculate_MCC
+)
+
 
 #' Calculate various performance metrics
 #'
@@ -81,22 +100,32 @@ calculate_performance_metrics <- function(TP, TN, FP, FN) {
   P <- TP + FN  # condition positive
   N <- TN + FP  # condition negative
   
-  metrics <- list(
+  pm <- list(
     TP = TP, TN = TN, FN = FN, FP = FP,
-    P = P, N = N,
-    TPR = TP / P ,  # true positive rate / recall / sensitivity
-    TNR = TN / N,  # true negative rate / specificity / selectivity
-    PPV = TP / (TP + FP), # positive predictive value / precision
-    NPV = TN / (TN + FN), # negative predictive value 
-    FNR = FN / P, # miss rate or false negative rate
-    FPR = FP / N, # fall-out or false positive rate 
-    FDR = FP / (FP + TP), # false discovery rate
-    FOR = FN / (FN + TN), # false omission rate
-    ACC = (TP + TN) / (P + N), # accuracy
-    F1 = (2 * TP) / (2*TP + FP + FN), # F1 score
-    MCC = calculate_MCC(TP, TN, FP, FN) # Matthews correlation coefficient
+    P = P, N = N
   )
-  
-  return(metrics)
+  pm <- append(pm, lapply(pm_functions, function(FUNC){FUNC(TP, TN, FP, FN)}))
+  return(pm)
 }
-
+# calculate_performance_metrics.old <- function(TP, TN, FP, FN) {
+#   P <- TP + FN  # condition positive
+#   N <- TN + FP  # condition negative
+#   
+#   metrics <- list(
+#     TP = TP, TN = TN, FN = FN, FP = FP,
+#     P = P, N = N,
+#     TPR = TP / P ,  # true positive rate / recall / sensitivity
+#     TNR = TN / N,  # true negative rate / specificity / selectivity
+#     PPV = TP / (TP + FP), # positive predictive value / precision
+#     NPV = TN / (TN + FN), # negative predictive value 
+#     FNR = FN / P, # miss rate or false negative rate
+#     FPR = FP / N, # fall-out or false positive rate 
+#     FDR = FP / (FP + TP), # false discovery rate
+#     FOR = FN / (FN + TN), # false omission rate
+#     ACC = (TP + TN) / (P + N), # accuracy
+#     F1 = (2 * TP) / (2*TP + FP + FN), # F1 score
+#     MCC = calculate_MCC(TP, TN, FP, FN) # Matthews correlation coefficient
+#   )
+#   
+#   return(metrics)
+# }
