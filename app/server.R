@@ -29,7 +29,7 @@ server = function(input, output, session) {
   
   
   upload_error_message <- list(
-    file_ref = "Please upload a CSV file with reference data. (Test data can be included as column or uploaded seperatly later)",
+    file_ref = "Please upload a CSV file with reference data. (Test data can be included as column or uploaded seperatly later.)",
     col_ref = "Please select a column for the reference data (2 categories).",
     col_test = "Please select a column for the test data (2 categories)."
   )
@@ -265,7 +265,7 @@ server = function(input, output, session) {
   
   # change message field
   observe({
-    text <- c(HTML("<b>Require:<br></b>"))
+    text <- c(HTML("<b>Requirements:<br></b>"))
     if (!valid_input_options$file_ref) {
       text <- c(text, paste("-", upload_error_message$file_ref))
       output$text_input_message <- renderUI(HTML(text))
