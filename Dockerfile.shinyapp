@@ -1,0 +1,25 @@
+FROM rocker/shiny:latest
+
+RUN apt-get update && apt-get install libcurl4-openssl-dev libv8-dev xml2 -y &&\
+  mkdir -p /var/lib/shiny-server/bookmarks/shiny
+
+# Download and install library
+RUN R -e "install.packages(c('shinydashboard', 'shinyjs', 'V8'))"
+
+# copy dependencies
+COPY install_dependencies.R /srv/shiny-server/ 
+RUN R < /srv/shiny-server/install_dependencies.R
+
+# copy the app to the image 
+COPY app /srv/shiny-server/
+# make all app files readable (solves issue when dev in Windows, but building in Ubuntu)
+
+RUN chmod -R 755 /srv/shiny-server/
+
+EXPOSE 3838
+
+COPY shiny-server.sh /usr/bin/shiny-server.sh
+RUN chmod -R 777 /srv/shiny-server/
+
+CMD ["bash", "/usr/bin/shiny-server.sh"]
+#CMD ["R", "-e", "shiny::runApp('/srv/shiny-server/', host = '0.0.0.0', port = 3838)"]
