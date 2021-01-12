@@ -81,8 +81,7 @@ ui = fluidPage(
         
         conditionalPanel(
           condition = '!output.upload_valid',
-          p("please select a column for the reference and for the test data" ,
-            style='color : red; font-weight:bold')
+          htmlOutput("text_input_message", style='color : red;')
         ), # conditionalPanel
         conditionalPanel(
           condition = 'output.upload_valid',

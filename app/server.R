@@ -27,6 +27,18 @@ server = function(input, output, session) {
   doAnalysis <- FALSE
   makeReactiveBinding("doAnalysis")
   
+  
+  upload_error_message <- list(
+    file_ref = "Please upload a CSV file with reference data. (Test data can be included as column or uploaded seperatly later)",
+    col_ref = "Please select a column for the reference data (2 categories).",
+    col_test = "Please select a column for the test data (2 categories)."
+  )
+
+  valid_input_options <- reactiveValues(
+    file_ref = FALSE,
+    col_ref = FALSE,
+    col_test = FALSE
+  )
   uploaded_files <- reactiveValues(
     reference=list(
       df=NULL,
@@ -62,7 +74,7 @@ server = function(input, output, session) {
       df=df,
       filename=inFile$name
     )
-    
+    valid_input_options$file_ref <<- TRUE
   })
   
   observeEvent(input$file_test, {
@@ -154,6 +166,7 @@ server = function(input, output, session) {
       
       selections$column_reference <- column
       selections$choices_reference <- choices
+      return(TRUE)
     }
   })
   output$reference_column_valid <- reactive(reference_column_valid())
@@ -248,6 +261,24 @@ server = function(input, output, session) {
     js$enableTab("Analysis")
     js$enableTab("Report")
     updateNavlistPanel(session, "sidebar", selected = "Analysis")
+  })
+  
+  # change message field
+  observe({
+    text <- c(HTML("<b>Require:<br></b>"))
+    if (!valid_input_options$file_ref) {
+      text <- c(text, paste("-", upload_error_message$file_ref))
+      output$text_input_message <- renderUI(HTML(text))
+      return()
+    }
+    valid_input_options$col_ref <<- reference_column_valid()
+    valid_input_options$col_test <<- test_column_valid()
+    
+    opts <- reactiveValuesToList(valid_input_options)
+    if (any(opts ==FALSE)) {
+      text <- c(text, paste("-", upload_error_message[names(which(opts == FALSE))], collapse = "<br>"))
+      output$text_input_message <- renderUI(HTML(text))
+    }
   })
   
   #END: Upload files ----------------------------------------- Upload section #
