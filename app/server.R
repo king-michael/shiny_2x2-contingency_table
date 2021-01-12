@@ -58,7 +58,9 @@ server = function(input, output, session) {
     column_reference=NULL,
     column_test=NULL,
     choices_reference=NULL,
-    choices_test=NULL
+    choices_test=NULL,
+    selected_reference_positive=NULL,
+    selected_test_positive=NULL
   )
   
   
@@ -203,6 +205,8 @@ server = function(input, output, session) {
     } else {
       negative <- "NO negative value found"
     }
+    
+    selections$selected_reference_positive <- input$selected_reference_positive
     output$selected_reference_negative <- renderText(negative)
   })
   
@@ -216,6 +220,7 @@ server = function(input, output, session) {
     } else {
       negative <- "NO negative value found"
     }
+    selections$selected_test_positive <- input$selected_test_positive
     output$selected_test_negative <- renderText(negative)
   })
 
@@ -410,7 +415,7 @@ Matthews correlation coefficient : {MCC}
   # section: Report -----------------------------------------------------------
   
   report <- reactive({
-    create_report_list(analysis, env_anaylsis$keys)
+    create_report_list(analysis, selections, env_anaylsis$keys)
   })
   
   reportServer(
@@ -421,7 +426,7 @@ Matthews correlation coefficient : {MCC}
   )
   
   report_selected <- reactive({
-    create_report_list(analysis, analysis$selections_performance)
+    create_report_list(analysis, selections, analysis$selections_performance)
   })
   
   reportServer(

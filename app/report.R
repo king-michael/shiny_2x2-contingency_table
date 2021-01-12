@@ -9,6 +9,31 @@ source('localization.R')
 localization <- Localization$new("localization.xml")
 mapping_abbrv2label <- localization$get_map_attr2attr_from_xpath('metrics/metric', 'abbrv', 'label')
 
+create_ft_inputtable <- function(selections, metrics) {
+  ratio <- list(list(p=metrics$TP+metrics$FN, n=metrics$FP+metrics$TN),
+             list(p=metrics$TP+metrics$FP, n=metrics$FN+metrics$TN))
+  
+  ratio <- sapply(ratio, function(x){sprintf("%i/%i (%.0f/%.0f%%)", x$p, x$n, 100*x$p/(x$p+x$n), 100*x$n/(x$p+x$n))})
+  
+  df <- data.frame(
+    row.names = c("Reference Standard", "Test method"),
+    filename=c(selections$reference_file, selections$reference_file),
+    column=c(selections$column_reference, selections$column_test),
+    positive=c(selections$selected_reference_positive, selections$selected_test_positive),
+    negative=c(selections$choices_reference[selections$choices_reference != selections$selected_reference_positive],
+               selections$choices_test[selections$choices_test != selections$selected_test_positive]),
+    n_samples=c(nrow(selections$df_reference), nrow(selections$df_test)),
+    ratio=ratio
+  )
+  colnames(df) <- c("file name", "column", "positive", "negative", "N(samples)", "ratio: +/- (%)")
+  ft <- df %>% 
+    flextable() %>%
+    vline(j=1, border = fp_border(width = 1)) %>%
+    autofit()
+  return(ft)
+}
+
+
 create_ft_confusion_matrix <- function(metrics) {
   df <- as.confusionmatrix(metrics)
   
@@ -71,6 +96,7 @@ create_ft_performance_table <- function(performance_metrics,
 }
 
 create_report_list <- function(analysis,
+                               selections,
                                selections_performance, 
                                username=Sys.info()[["user"]]) {
   
@@ -87,8 +113,9 @@ create_report_list <- function(analysis,
   report = list(
     date = format(Sys.time(), format = "%x %H:%M %Z"),
     username = username,
+    n_values = sum(unlist(metrics)),
     FT = list(
-      ft_input = create_ft_confusion_matrix(metrics),
+      ft_input = create_ft_inputtable(selections, metrics),
       ft_error_matrix = create_ft_confusion_matrix(metrics),
       ft_performance = create_ft_performance_table(performance_metrics, 
                                                    confidence_intervals,

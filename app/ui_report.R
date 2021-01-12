@@ -35,7 +35,7 @@ reportServer <- function(id, outputfile, file_template, report) {
 
   
 # Test ------------------------------------------------------------------------
-if (sys.nframe() == 0L) { # if __name__ == '__main__'
+#if (sys.nframe() == 0L) { # if __name__ == '__main__'
   print("Run TEST VERSION")
   
   source('statistics.R')
@@ -92,6 +92,19 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
       ratios = NULL
     )
     
+    selections <- reactiveValues(
+      reference_file="reference_file",
+      test_file="test_file",
+      df_reference=NULL,
+      df_test=NULL,
+      column_reference="reference",
+      column_test="test",
+      choices_reference=c("positive", "negative"),
+      choices_test=c("positive", "negative"),
+      selected_reference_positive="positive",
+      selected_test_positive="negative"
+    )
+    
     selections_performance <- keys_default
     makeReactiveBinding("selections_performance")
     
@@ -99,6 +112,9 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
       print("Create reactive variables")
       df <- suppressMessages(readr::read_csv("qualitative_both_methods.csv"))
       df <- convert_df_to_boolean(df[, c('reference', 'test')])
+      
+      selections$df_reference <- df
+      selections$df_test <- df
       
       data$reference <- df$reference
       data$test <- df$test
@@ -120,7 +136,7 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
     # Testing -------------------------------------------------------------------
     
     report <- reactive({
-      create_report_list(analysis, env_anaylsis$keys)
+      create_report_list(analysis, selections, env_anaylsis$keys)
     })
     
     reportServer(
@@ -131,7 +147,7 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
     )
     
     report_selected <- reactive({
-      create_report_list(analysis, selections_performance)
+      create_report_list(analysis, selections, selections_performance)
     })
     
     reportServer(
@@ -145,5 +161,5 @@ if (sys.nframe() == 0L) { # if __name__ == '__main__'
   }
   
   shinyApp(ui, server)
-}
+#}
 
