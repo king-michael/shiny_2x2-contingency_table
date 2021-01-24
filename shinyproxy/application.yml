@@ -1,5 +1,5 @@
 proxy:
-  title: "Roche Interview : Michael King"
+  title: "Biostatistic methods"
   hide-navbar: false
   landing-page: /
   heartbeat-rate: 10000
@@ -10,10 +10,10 @@ proxy:
   specs:
   - id: shiny_app
     display-name: Test Method Evaluator
-    description: Compare a new test with a reference standard.
+    description: Compare a new test with a reference standard. (2x2 Contingency Table)
     container-cmd: ["bash", "/usr/bin/shiny-server.sh"]
-    container-image: roche/shiny_app
-    container-network: tki-net
+    container-image: 2x2contingency_table/shiny_app
+    container-network: biostat-net
     container-env:
       user: "shiny"
       environment:

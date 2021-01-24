@@ -6,16 +6,16 @@ services:
     #depends_on:
     #  - nginx
     #  - influxdb
-    image: roche/shinyproxy
-    container_name: roche_shinyproxy
+    image: 2x2contingency_table/shinyproxy
+    container_name: 2x2contingency_table_proxy
     restart: on-failure
     networks:
-      - tki-net
+      - biostat-net
     volumes:
       - ./shinyproxy/application.yml:/opt/shinyproxy/application.yml
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - 8888:8080
 networks:
-  tki-net:
-    name: tki-net
+  biostat-net:
+    name: biostat-net
